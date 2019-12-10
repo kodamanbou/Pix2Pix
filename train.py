@@ -10,7 +10,6 @@ from model import Generator, Discriminator, generator_loss, discriminator_loss
 
 
 def load(image_file):
-    tf.print(image_file)
     image = tf.io.read_file(image_file)
     image = tf.image.decode_jpeg(image)
 
@@ -19,12 +18,14 @@ def load(image_file):
     input_image = tf.cast(input_image, tf.float32)
     real_image = tf.cast(image, tf.float32)
 
-    print(input_image.shape)
+    print(tf.shape(input_image))
+    print(tf.shape(real_image))
 
     return input_image, real_image
 
 
 def resize(input_image, real_image, height, width):
+    input_image = tf.image.grayscale_to_rgb(input_image)
     input_image = tf.image.resize(input_image, [height, width],
                                   method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     real_image = tf.image.resize(real_image, [height, width],
@@ -51,7 +52,6 @@ def normalize(input_image, real_image):
 @tf.function
 def random_jitter(input_image, real_image):
     # resizing to 286 x 286 x 3
-    input_image = tf.image.grayscale_to_rgb(input_image)
     input_image, real_image = resize(input_image, real_image, 286, 286)
 
     # randomly cropping to 256 x 256 x 3
@@ -69,8 +69,6 @@ def random_jitter(input_image, real_image):
 
 def load_image_train(image_file):
     input_image, real_image = load(image_file)
-    input_image, real_image = resize(input_image, real_image,
-                                     hp.image_size, hp.image_size)
     input_image, real_image = random_jitter(input_image, real_image)
     input_image, real_image = normalize(input_image, real_image)
 
@@ -175,7 +173,8 @@ if __name__ == '__main__':
     train_dataset = train_dataset.batch(hp.batch_size)
 
     test_dataset = tf.data.Dataset.list_files(test_paths)
-    test_dataset = test_dataset.map(load_image_test)
+    test_dataset = test_dataset.map(load_image_test,
+                                    num_parallel_calls=tf.data.experimental.AUTOTUNE)
     test_dataset = test_dataset.batch(hp.batch_size)
 
     generator = Generator()
