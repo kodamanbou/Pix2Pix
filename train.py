@@ -10,6 +10,7 @@ from model import Generator, Discriminator, generator_loss, discriminator_loss
 
 
 def load(image_file):
+    tf.print(image_file)
     image = tf.io.read_file(image_file)
     image = tf.image.decode_jpeg(image)
 
@@ -50,6 +51,7 @@ def normalize(input_image, real_image):
 @tf.function
 def random_jitter(input_image, real_image):
     # resizing to 286 x 286 x 3
+    input_image = tf.image.grayscale_to_rgb(input_image)
     input_image, real_image = resize(input_image, real_image, 286, 286)
 
     # randomly cropping to 256 x 256 x 3
@@ -60,11 +62,15 @@ def random_jitter(input_image, real_image):
         input_image = tf.image.flip_left_right(input_image)
         real_image = tf.image.flip_left_right(real_image)
 
+    input_image = tf.image.rgb_to_grayscale(input_image)
+
     return input_image, real_image
 
 
 def load_image_train(image_file):
     input_image, real_image = load(image_file)
+    input_image, real_image = resize(input_image, real_image,
+                                     hp.image_size, hp.image_size)
     input_image, real_image = random_jitter(input_image, real_image)
     input_image, real_image = normalize(input_image, real_image)
 
@@ -84,14 +90,17 @@ def generate_images(model, test_input, tar):
     prediction = model(test_input, training=True)
     plt.figure(figsize=(15, 15))
 
-    display_list = [test_input[0], tar[0], prediction[0]]
+    display_list = [test_input[0][:, :, 0], tar[0], prediction[0]]
     title = ['Input Image', 'Ground Truth', 'Predicted Image']
 
     for i in range(3):
         plt.subplot(1, 3, i + 1)
         plt.title(title[i])
         # getting the pixel values between [0, 1] to plot it.
-        plt.imshow(display_list[i] * 0.5 + 0.5)
+        if i == 0:
+            plt.imshow(display_list[i] * 0.5 + 0.5, cmap='gray')
+        else:
+            plt.imshow(display_list[i] * 0.5 + 0.5)
         plt.axis('off')
     plt.show()
 
@@ -159,13 +168,13 @@ if __name__ == '__main__':
 
     train_paths, test_paths = train_test_split(img_paths)
 
-    train_dataset = tf.data.Dataset.from_tensor_slices(train_paths)
+    train_dataset = tf.data.Dataset.list_files(train_paths)
     train_dataset = train_dataset.map(load_image_train,
                                       num_parallel_calls=tf.data.experimental.AUTOTUNE)
     train_dataset = train_dataset.shuffle(400)
     train_dataset = train_dataset.batch(hp.batch_size)
 
-    test_dataset = tf.data.Dataset.from_tensor_slices(test_paths)
+    test_dataset = tf.data.Dataset.list_files(test_paths)
     test_dataset = test_dataset.map(load_image_test)
     test_dataset = test_dataset.batch(hp.batch_size)
 

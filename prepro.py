@@ -1,12 +1,13 @@
 import glob
 import requests
 import datetime
+from tqdm import tqdm
 
 tsv_paths = glob.glob('./datasets/*.tsv')
 for path in tsv_paths:
     with open(path, 'r') as f:
         f.readline()
-        for url in f.readlines():
+        for url in tqdm(f.readlines()):
             url = url.split('\t')[0]
             print(url)
             ext = url.split('.')[-1]

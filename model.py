@@ -101,8 +101,8 @@ def generator_loss(disc_gen_out, gen_out, target):
 def Discriminator():
     initializer = tf.random_normal_initializer(0., 0.02)
 
-    inp = Input(shape=[256, 256, 3], name='input_image')
-    tar = Input(shape=[256, 256, 3], name='target_image')
+    inp = tf.keras.layers.Input(shape=[256, 256, 3], name='input_image')
+    tar = tf.keras.layers.Input(shape=[256, 256, 3], name='target_image')
 
     x = tf.keras.layers.concatenate([inp, tar])  # [N, 256, 256, 4]
 
@@ -118,7 +118,7 @@ def Discriminator():
     batchnorm1 = tf.keras.layers.BatchNormalization()(conv)
     leaky_relu = tf.keras.layers.LeakyReLU()(batchnorm1)
 
-    zero_pad2 = tf.keras.layers.Conv2D()(leaky_relu)  # [N, 33, 33, 512]
+    zero_pad2 = tf.keras.layers.ZeroPadding2D()(leaky_relu)  # [N, 33, 33, 512]
 
     last = tf.keras.layers.Conv2D(1, 4, strides=1,
                                   kernel_initializer=initializer)(zero_pad2)  # [N, 30, 30, 1]
