@@ -79,6 +79,7 @@ def load_image_test(image_file):
     input_image, real_image = load(image_file)
     input_image, real_image = resize(input_image, real_image,
                                      hp.image_size, hp.image_size)
+    input_image = tf.image.rgb_to_grayscale(input_image)
     input_image, real_image = normalize(input_image, real_image)
 
     return input_image, real_image
