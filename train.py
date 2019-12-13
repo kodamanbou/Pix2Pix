@@ -13,19 +13,13 @@ def load(image_file):
     image = tf.io.read_file(image_file)
     image = tf.image.decode_jpeg(image)
 
-    input_image = tf.image.rgb_to_grayscale(image)
-
-    input_image = tf.cast(input_image, tf.float32)
+    input_image = tf.cast(image, tf.float32)
     real_image = tf.cast(image, tf.float32)
-
-    print(tf.shape(input_image))
-    print(tf.shape(real_image))
 
     return input_image, real_image
 
 
 def resize(input_image, real_image, height, width):
-    input_image = tf.image.grayscale_to_rgb(input_image)
     input_image = tf.image.resize(input_image, [height, width],
                                   method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     real_image = tf.image.resize(real_image, [height, width],
@@ -38,6 +32,8 @@ def random_crop(input_image, real_image):
     stacked_image = tf.stack([input_image, real_image], axis=0)
     cropped_image = tf.image.random_crop(
         stacked_image, size=[2, hp.image_size, hp.image_size, 3])
+    print(cropped_image[0].shape)
+    print(cropped_image[1].shape)
 
     return cropped_image[0], cropped_image[1]
 
