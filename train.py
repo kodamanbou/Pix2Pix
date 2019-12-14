@@ -11,7 +11,7 @@ from model import Generator, Discriminator, generator_loss, discriminator_loss
 
 def load(image_file):
     image = tf.io.read_file(image_file)
-    image = tf.image.decode_jpeg(image)
+    image = tf.image.decode_jpeg(image, channels=3)
 
     input_image = tf.cast(image, tf.float32)
     real_image = tf.cast(image, tf.float32)
@@ -29,11 +29,11 @@ def resize(input_image, real_image, height, width):
 
 
 def random_crop(input_image, real_image):
+    print(tf.shape(input_image))
+    print(tf.shape(real_image))
     stacked_image = tf.stack([input_image, real_image], axis=0)
     cropped_image = tf.image.random_crop(
         stacked_image, size=[2, hp.image_size, hp.image_size, 3])
-    print(cropped_image[0].shape)
-    print(cropped_image[1].shape)
 
     return cropped_image[0], cropped_image[1]
 
